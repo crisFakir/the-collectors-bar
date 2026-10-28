@@ -1,6 +1,6 @@
 # Requirements — The Collectors Bar
 
-> **Status:** Draft v0.1 · **Last updated:** 2026-10-28
+> **Status:** Draft v0.2 · **Last updated:** 2026-10-28
 >
 > This document lists *what* the system must do (functional requirements) and *how well* it must do it (non-functional requirements). It does not describe *how* it will be built — that belongs in the [Architecture Decision Records](adr/README.md).
 
@@ -12,7 +12,7 @@ The Collectors Bar is an online store for collectibles based in Portugal, with a
 - **Sealed** TCG product (boosters, booster boxes, starter decks, etc.).
 - **Singles** (individual cards), also sold on Cardmarket.
 - **Figures** (Funko Pop, LEGO, etc.) and **accessories** (sleeves, binders, toploaders, etc.).
-- **Auctions** of selected items (later release).
+- **Auctions** of selected items (release 3).
 
 Primary market: Portugal (Mainland, Azores and Madeira). Secondary market: rest of the EU, then worldwide.
 
@@ -20,9 +20,9 @@ Primary market: Portugal (Mainland, Azores and Madeira). Secondary market: rest 
 
 | Term | Definition |
 |---|---|
-| **Break** | Live event in which sealed product is opened on stream. Buyers purchase *spots*; the cards pulled are allocated to spot holders according to the *break format*. |
-| **Spot** | A purchasable share of a break (e.g. one pack, one slot, the whole box). |
-| **Break format** | The rules mapping pulled content to spots (e.g. personal, pick-your-spot, random spot). |
+| **Break** | Live event in which a sealed product (e.g. a booster box) is opened on stream. Buyers purchase *spots*; each buyer receives the cards from the packs they bought. |
+| **Spot** | A purchasable share of a break: one or more booster packs from the box, or the whole box. |
+| **Break format** | How a break is split into spots (e.g. per pack, whole box). |
 | **Hit** | A valuable card pulled during a break. |
 | **Sealed** | Unopened product. |
 | **Single** | An individual card sold on its own, described by game, set, number, rarity, language and condition. |
@@ -58,12 +58,34 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | Release | Goal |
 |---|---|
 | **R1** | Go-live: catalogue, breaks + vault, checkout, payments, invoicing, shipping, back office, legal, PT/EN. |
-| **R2** | Growth: auctions, wishlists, back-in-stock alerts, extra carriers. |
+| **R2** | Growth: wishlists, back-in-stock alerts, extra carriers, more payment methods. |
+| **R3** | Auctions. |
 | **Later** | Ideas without a business case yet. |
 
-## 5. Functional requirements
+## 5. Requirement IDs
 
-### 5.1 Catalogue and navigation (CAT)
+Every requirement has an ID made of an **area prefix** and a **sequential number**, e.g. `BRK-06` is the 6th requirement of the *Breaks* area. IDs never change or get reused, so user stories, tests, ADRs and commits can reference them. Each functional area will become an **epic** in the project board.
+
+| Prefix | Area | Covers |
+|---|---|---|
+| `CAT` | **Cat**alogue | Products, categories, navigation, search |
+| `BRK` | **Br**ea**k**s | Live breaks and Twitch integration |
+| `VLT` | **V**au**lt** | Items held for customers, combined shipping |
+| `CHK` | **Ch**ec**k**out | Cart, reservations, purchase limits |
+| `PAY` | **Pay**ments | Easypay methods, webhooks, refunds |
+| `TAX` | **Tax** | VAT and invoicing |
+| `SHP` | **Sh**i**p**ping | Carrier, fulfilment, tracking |
+| `AUC` | **Auc**tions | Bidding and auction lifecycle |
+| `ACC` | **Acc**ount | Customer registration and self-service |
+| `ADM` | **Adm**inistration | Back office |
+| `NTF` | **N**o**t**i**f**ications | Transactional emails |
+| `LEG` | **Leg**al | Compliance pages and consents |
+| `I18N` | **I**nternationalisatio**n** | Languages and locale formatting (18 letters between *i* and *n*) |
+| `NFR-*` | **N**on-**F**unctional **R**equirement | Followed by a quality category: `PERF` performance, `SCAL` scalability, `CONS` consistency, `AVAIL` availability, `BKP` backups, `SEC` security, `PRIV` privacy, `USE` usability, `A11Y` accessibility (11 letters between *a* and *y*), `COMP` compatibility, `SEO`, `MAINT` maintainability, `TEST` testing, `OBS` observability, `PORT` portability, `DOC` documentation |
+
+## 6. Functional requirements
+
+### 6.1 Catalogue and navigation (CAT)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -82,15 +104,16 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | CAT-13 | The homepage is dynamic and managed from the back office: live-now banner, upcoming breaks, new arrivals, featured products, promotions. | Must | R1 |
 | CAT-14 | Customers can subscribe to back-in-stock notifications. | Could | R2 |
 | CAT-15 | Customers can keep a wishlist. | Could | R2 |
+| CAT-16 | Games with many licensed IPs (e.g. Weiss Schwarz) appear once in the menu as the game itself; their IPs are browsed as subcategories or filters inside the game. | Must | R1 |
 
-### 5.2 Live breaks and Twitch (BRK)
+### 6.2 Live breaks and Twitch (BRK)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
 | BRK-01 | Staff creates a break with: title, product(s) to be opened, format, number of spots, price per spot, scheduled date and sale deadline. | Must | R1 |
 | BRK-02 | A break follows a lifecycle: *Draft → Scheduled → On sale → Sold out → Live → Completed*, or *Cancelled*. | Must | R1 |
-| BRK-03 | Supported formats: *Personal* (one buyer, whole product) and *Pick-your-spot* (buyer chooses a specific spot). | Must | R1 |
-| BRK-04 | *Random spot* format (spots assigned randomly after sell-out) with an auditable, logged assignment. **Pending legal review (Q4).** | Could | R1 |
+| BRK-03 | Supported formats: *Pack break* (each spot is one or more booster packs from the sealed product) and *Personal break* (one buyer buys the whole product). | Must | R1 |
+| BRK-04 | *Random spot* format (buyers pay for a randomly assigned share, e.g. a team or character). Not offered: every spot corresponds to specific sealed packs (see Q4). | Won't | — |
 | BRK-05 | Breaks are visually and navigationally distinct from sealed products (own section, own product card, "Buy spot" call to action). | Must | R1 |
 | BRK-06 | A spot can never be sold twice, even under concurrent purchases. | Must | R1 |
 | BRK-07 | The break page shows remaining spots in near real time. | Should | R1 |
@@ -103,7 +126,7 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | BRK-14 | Past breaks page with VOD link and results. | Could | R2 |
 | BRK-15 | Twitch chat bot announcing spot purchases. | Could | Later |
 
-### 5.3 Vault and combined shipping (VLT)
+### 6.3 Vault and combined shipping (VLT)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -113,7 +136,7 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | VLT-04 | Free storage period (configurable), with reminders before it ends and a defined policy afterwards. | Should | R1 |
 | VLT-05 | Low-value pulls ("bulk") can be handled with a predefined option (ship, keep in vault, give back). | Could | R2 |
 
-### 5.4 Cart and checkout (CHK)
+### 6.4 Cart and checkout (CHK)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -129,7 +152,7 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | CHK-10 | Discount codes (percentage, fixed amount, free shipping) with validity dates and usage limits. | Should | R1 |
 | CHK-11 | Delivery to pickup points / lockers. | Could | R2 |
 
-### 5.5 Payments (PAY)
+### 6.5 Payments (PAY)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -139,17 +162,18 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | PAY-04 | Full and partial refunds from the back office. | Must | R1 |
 | PAY-05 | Apple Pay, Google Pay, PayPal. | Could | R2 |
 
-### 5.6 Invoicing and tax (TAX)
+### 6.6 Invoicing and tax (TAX)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
 | TAX-01 | An invoice-receipt is issued automatically through InvoiceXpress when payment is confirmed; the PDF is emailed and available in the customer account. | Must | R1 |
 | TAX-02 | Refunds issue a credit note. | Must | R1 |
-| TAX-03 | The VAT rate is determined by configurable rules (seller VAT regime, ship-from location, destination region, product tax category) — no hard-coded rates. **See Q1–Q3.** | Must | R1 |
-| TAX-04 | Support for VAT exemption (article 53 of CIVA), with the legally required mention on invoices. | Must | R1 |
+| TAX-03 | The VAT rate is determined by configurable rules (seller VAT regime, ship-from location, destination region, product tax category) — no hard-coded rates. **See Q2.** | Must | R1 |
+| TAX-04 | Support for VAT exemption (article 53 of CIVA). Not needed: the seller is in the normal VAT regime (see Q1). | Won't | — |
 | TAX-05 | Support for the margin scheme for second-hand goods (e.g. singles bought from private sellers). **See Q3.** | Could | R2 |
+| TAX-06 | Sales to consumers in other EU countries apply the destination country's VAT when required (EU One-Stop Shop scheme). **See Q2.** | Should | R1 |
 
-### 5.7 Shipping and fulfilment (SHP)
+### 6.7 Shipping and fulfilment (SHP)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -162,16 +186,16 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | SHP-07 | Shipping outside the EU, with customs documents. | Could | Later |
 | SHP-08 | Additional carriers. | Could | R2 |
 
-### 5.8 Auctions (AUC)
+### 6.8 Auctions (AUC)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
-| AUC-01 | Timed online auctions: starting price, bid increment, optional reserve price, end date. | Could | R2 |
-| AUC-02 | Anti-sniping: a bid in the last minutes extends the end time. | Could | R2 |
-| AUC-03 | The winner must pay within a deadline; otherwise the item is offered to the next bidder or relisted. | Could | R2 |
+| AUC-01 | Timed online auctions: starting price, bid increment, optional reserve price, end date. | Could | R3 |
+| AUC-02 | Anti-sniping: a bid in the last minutes extends the end time. | Could | R3 |
+| AUC-03 | The winner must pay within a deadline; otherwise the item is offered to the next bidder or relisted. | Could | R3 |
 | AUC-04 | Live auctions during the Twitch stream. | Could | Later |
 
-### 5.9 Customer account (ACC)
+### 6.9 Customer account (ACC)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -183,7 +207,7 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | ACC-06 | Language preference (PT/EN) used for site and emails. | Must | R1 |
 | ACC-07 | GDPR self-service: data export, account deletion, consent management. | Must | R1 |
 
-### 5.10 Back office (ADM)
+### 6.10 Back office (ADM)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -201,14 +225,14 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | ADM-12 | Audit log of back-office actions (who changed what, when). | Should | R1 |
 | ADM-13 | Stock sync with Cardmarket (avoid selling the same single twice). **See Q8.** | Could | R2 |
 
-### 5.11 Notifications (NTF)
+### 6.11 Notifications (NTF)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
 | NTF-01 | Transactional emails in the customer's language: account verification, password reset, order confirmation, Multibanco payment details, payment received, invoice, shipped (with tracking), break reminder, break results, vault expiry reminder, refund. | Must | R1 |
 | NTF-02 | Newsletter subscription with separate, logged consent. | Could | R2 |
 
-### 5.12 Legal and compliance (LEG)
+### 6.12 Legal and compliance (LEG)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -220,7 +244,7 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | LEG-06 | Marketing consent separate from order acceptance, and logged. | Must | R1 |
 | LEG-07 | Minimum age confirmation for break spots. **See Q9.** | Should | R1 |
 
-### 5.13 Internationalisation (I18N)
+### 6.13 Internationalisation (I18N)
 
 | ID | Requirement | Priority | Release |
 |---|---|---|---|
@@ -231,11 +255,11 @@ Each requirement has a **MoSCoW** priority and a target **release**:
 | I18N-05 | New languages can be added by providing translations only, without code changes. | Should | R1 |
 | I18N-06 | Multi-currency. | Won't | — |
 
-## 6. Non-functional requirements
+## 7. Non-functional requirements
 
 Targets marked with † are initial estimates to be validated once real traffic data exists.
 
-### 6.1 Performance and scalability
+### 7.1 Performance and scalability
 
 | ID | Requirement |
 |---|---|
@@ -243,21 +267,21 @@ Targets marked with † are initial estimates to be validated once real traffic 
 | NFR-PERF-02 | Catalogue API responses p95 < 300 ms. |
 | NFR-SCAL-01 | During a live break the system handles 500 concurrent users and 50 purchase attempts per second on the same break without errors.† |
 
-### 6.2 Data consistency
+### 7.2 Data consistency
 
 | ID | Requirement |
 |---|---|
 | NFR-CONS-01 | Stock and spot allocation are strongly consistent: overselling is impossible, verified by automated concurrency tests. |
 | NFR-CONS-02 | Monetary values are stored as integer cents with a currency code; rounding rules are defined once and match the invoices. |
 
-### 6.3 Availability and recovery
+### 7.3 Availability and recovery
 
 | ID | Requirement |
 |---|---|
 | NFR-AVAIL-01 | 99.5 % monthly availability; planned maintenance never overlaps scheduled breaks. |
 | NFR-BKP-01 | Daily database backups kept for 30 days; restore procedure tested. RPO 24 h, RTO 4 h.† |
 
-### 6.4 Security
+### 7.4 Security
 
 | ID | Requirement |
 |---|---|
@@ -269,7 +293,7 @@ Targets marked with † are initial estimates to be validated once real traffic 
 | NFR-SEC-06 | Secrets are kept in environment variables / a secret manager, never in the repository. |
 | NFR-SEC-07 | Back-office access is role-based and every sensitive action is logged. |
 
-### 6.5 Privacy (GDPR)
+### 7.5 Privacy (GDPR)
 
 | ID | Requirement |
 |---|---|
@@ -277,7 +301,7 @@ Targets marked with † are initial estimates to be validated once real traffic 
 | NFR-PRIV-02 | Defined retention periods per data category (e.g. invoices are kept as long as tax law requires). |
 | NFR-PRIV-03 | Personal data hosted in the EU; data processing agreements with all processors. |
 
-### 6.6 Usability and accessibility
+### 7.6 Usability and accessibility
 
 | ID | Requirement |
 |---|---|
@@ -287,14 +311,14 @@ Targets marked with † are initial estimates to be validated once real traffic 
 | NFR-A11Y-01 | WCAG 2.2 level AA. |
 | NFR-COMP-01 | Supports the last two versions of Chrome, Safari, Firefox and Edge, on desktop and mobile. |
 
-### 6.7 SEO
+### 7.7 SEO
 
 | ID | Requirement |
 |---|---|
 | NFR-SEO-01 | Public pages are server-rendered with unique titles and meta descriptions. |
 | NFR-SEO-02 | Structured data (schema.org `Product`, `Offer`, `BreadcrumbList`), XML sitemap, canonical URLs, `hreflang`. |
 
-### 6.8 Maintainability and quality
+### 7.8 Maintainability and quality
 
 | ID | Requirement |
 |---|---|
@@ -307,31 +331,37 @@ Targets marked with † are initial estimates to be validated once real traffic 
 | NFR-PORT-01 | Local development environment reproducible with Docker. |
 | NFR-DOC-01 | Significant technical decisions are recorded as ADRs. |
 
-## 7. Constraints and assumptions
+## 8. Constraints and assumptions
 
-- The seller is currently a sole trader (*trabalhador independente*) in Portugal; the VAT regime is to be confirmed.
+- The seller is currently a sole trader (*trabalhador independente*) in Portugal, in the normal VAT regime.
+- Tax rules follow the accountant's guidance, with no tax optimisation schemes; the system only applies the configured rules.
 - Payments: Easypay. Invoicing: InvoiceXpress. Both chosen for existing team experience.
 - Main stock location: Terceira, Azores.
 - No WordPress, Shopify or other off-the-shelf store platform — custom code.
 - Low running costs at launch.
 
-## 8. Open questions
+## 9. Open questions
 
 | # | Question | Who answers |
 |---|---|---|
-| Q1 | Which VAT regime applies at launch: exemption under article 53 of CIVA, or the normal regime? This changes prices, invoices and the "VAT included" legend. | Accountant |
-| Q2 | Which VAT rate applies to goods shipped from the Azores warehouse to customers on the Mainland, Madeira and the rest of the EU? | Accountant |
+| Q2 | Which VAT rate applies to goods shipped from the Azores warehouse to customers on the Mainland, in Madeira and in the rest of the EU (including the One-Stop Shop threshold)? The system will apply whatever rule the accountant defines. | Accountant |
 | Q3 | Should singles bought from private sellers use the margin scheme for second-hand goods? | Accountant |
-| Q4 | Are *random spot* breaks allowed under Portuguese gaming law (SRIJ), given that buyers pay for a random outcome? Are *pick-your-spot* breaks safe? | Lawyer |
-| Q5 | Imports from the US: commercial goods are normally subject to customs duties and import VAT regardless of the importer's nationality. What actually applies to our case? | Customs broker / accountant |
 | Q6 | Which carrier(s) serve Terceira with an API (CTT, DPD, GLS, an aggregator)? Costs per zone? | Team |
 | Q7 | Will there be a second stock location (e.g. Mainland)? | Team |
 | Q8 | Must stock be synchronised with Cardmarket from day one? | Team |
 | Q9 | Minimum age to buy break spots? | Lawyer / Team |
 | Q10 | Vault: free storage period, and what happens after it ends? | Team |
-| Q11 | Which break formats do you run today, and how are spots priced? | Team |
+| Q11 | How are spots priced (per pack, per box, discounts for multiple packs)? | Team |
 | Q12 | Auctions: timed online, live on stream, or both? | Team |
 
-## 9. Out of scope (for now)
+### Answered
 
-NFTs, real-world asset tokenisation, crypto payments and a digital TCG. The architecture will not prevent them, but no work is planned until there is a business case.
+| # | Question | Answer | Date |
+|---|---|---|---|
+| Q1 | Which VAT regime applies at launch? | Normal regime. The article 53 exemption does not apply because the seller has another activity code. | 2026-10-28 |
+| Q4 | Are break formats legally safe under gaming law? | Buyers always pay for specific booster packs from a sealed product opened live — no random allocation of value. Random-spot formats are not offered (BRK-04). | 2026-10-28 |
+| Q5 | Customs on imports from the US? | Out of scope for now. | 2026-10-28 |
+
+## 10. Out of scope (for now)
+
+Imports from the US, NFTs, real-world asset tokenisation, crypto payments and a digital TCG. The architecture will not prevent them, but no work is planned until there is a business case.
