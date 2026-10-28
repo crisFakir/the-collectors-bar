@@ -1,0 +1,25 @@
+name: Epic
+description: A large feature area, split into user stories (sub-issues).
+title: "[Epic] "
+labels: ["epic"]
+body:
+  - type: input
+    id: area
+    attributes:
+      label: Requirement area
+      description: Prefix from docs/requirements.md.
+      placeholder: e.g. BRK
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What this epic delivers and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Out of scope
+      description: What this epic explicitly does not include.
