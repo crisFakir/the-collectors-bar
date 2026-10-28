@@ -28,3 +28,5 @@ Small, easily reversible choices do not need an ADR.
 | ADR | Title | Status |
 |---|---|---|
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
+| [0002](0002-use-nextjs-and-typescript.md) | Use Next.js and TypeScript for the whole application | Accepted |
+| [0003](0003-use-plantuml-for-uml-diagrams.md) | Use PlantUML for UML diagrams | Proposed |
